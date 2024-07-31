@@ -109,23 +109,68 @@ class Subscription:
         elif _type == 'AUTH_STATE':
             self.__is_authorized = message['state'] == 'AUTHORIZED'
         elif _type == 'FEED_DATA':
-            for event in message['data']:
-                self.__handle_feed_event(event)
+            self.__handle_feed_event(message['data'])
         else:
             logging.debug('Unhandled message type: %s', _type)
 
     def __handle_feed_event(self, event: dict) -> None:
-        event_type = event['eventType']
-        original_symbol = self.__streamer_symbol_translations.get_original_symbol(event['eventSymbol'])
-        event['symbol'] = original_symbol
+        event_type = event[0]
         if event_type == 'Quote' and self.__on_quote:
-            self.__on_quote(event)
+            data = self.__handle_compact_quote(event[1])
+            self.__on_quote(data)
         elif event_type == 'Candle' and self.__on_candle:
-            self.__on_candle(event)
+            data = self.__handle_compact_candle(event[1])
+            self.__on_candle(data)
         elif event_type == 'Greeks' and self.__on_greeks:
-            self.__on_greeks(event)
+            data = self.__handle_compact_greeks(event[1])
+            self.__on_greeks(data)
         else:
-            logging.debug('Unhandled feed event type %s for symbol %s', event_type, original_symbol)
+            logging.debug('Unhandled feed event type %s for symbol %s', event_type)
+    
+    def __handle_compact_quote(self, data: list) -> dict:
+        quote = {}
+        for i in range(0, len(data), 13):
+            event_symbol = data[i+1]
+            print('g', event_symbol)
+            original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
+            quote[original_symbol] = {}
+            quote[original_symbol]['eventSymbol'] = event_symbol
+            quote[original_symbol]['bidPrice'] = data[i+7]
+            quote[original_symbol]['askPrice'] = data[i+11]
+        return quote
+
+    def __handle_compact_candle(self, data: list) -> dict:
+        candle = {}
+        for i in range(0, len(data), 18):
+            event_symbol = data[i+1]
+            print('c', event_symbol)
+            original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
+            candle[original_symbol] = {}
+            candle[original_symbol]['eventSymbol'] = event_symbol
+            candle[original_symbol]['Open'] = data[i+8]
+            candle[original_symbol]['High'] = data[i+9]
+            candle[original_symbol]['Low'] = data[i+10]
+            candle[original_symbol]['Close'] = data[i+11]
+            candle[original_symbol]['Volumen'] = data[i+12]
+        return candle
+    
+    def __handle_compact_greeks(self, data: list) -> dict:
+        greeks = {}
+        for i in range(0, len(data), 14):
+            print(data)
+            event_symbol = data[i+1]
+            print('g', event_symbol)
+            original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
+            greeks[original_symbol] = {}
+            greeks[original_symbol]['eventSymbol'] = event_symbol
+            greeks[original_symbol]['Price'] = data[i+8]
+            greeks[original_symbol]['Volatility'] = data[i+9]
+            greeks[original_symbol]['Delta'] = data[i+10]
+            greeks[original_symbol]['Gamma'] = data[i+11]
+            greeks[original_symbol]['Theta'] = data[i+12]
+            greeks[original_symbol]['Rho'] = data[i+13]
+            greeks[original_symbol]['Vega'] = data[i+13]
+        return greeks
 
     def __send(self, _type: str, channel: Optional[int] = 0, **kwargs) -> None:
         self.__websocket.send(ujson.dumps({
