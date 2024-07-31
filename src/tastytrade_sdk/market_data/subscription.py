@@ -131,7 +131,6 @@ class Subscription:
         quote = {}
         for i in range(0, len(data), 13):
             event_symbol = data[i+1]
-            print('g', event_symbol)
             original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
             quote[original_symbol] = {}
             quote[original_symbol]['eventSymbol'] = event_symbol
@@ -143,7 +142,6 @@ class Subscription:
         candle = {}
         for i in range(0, len(data), 18):
             event_symbol = data[i+1]
-            print('c', event_symbol)
             original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
             candle[original_symbol] = {}
             candle[original_symbol]['eventSymbol'] = event_symbol
@@ -157,9 +155,7 @@ class Subscription:
     def __handle_compact_greeks(self, data: list) -> dict:
         greeks = {}
         for i in range(0, len(data), 14):
-            print(data)
             event_symbol = data[i+1]
-            print('g', event_symbol)
             original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
             greeks[original_symbol] = {}
             greeks[original_symbol]['eventSymbol'] = event_symbol
