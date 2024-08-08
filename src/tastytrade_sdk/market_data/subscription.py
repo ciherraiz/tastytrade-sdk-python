@@ -127,45 +127,48 @@ class Subscription:
         else:
             logging.debug('Unhandled feed event type %s for symbol %s', event_type)
     
-    def __handle_compact_quote(self, data: list) -> dict:
+    def __handle_compact_quote(self, data: list) -> list:
         quote = {}
         for i in range(0, len(data), 13):
             event_symbol = data[i+1]
             original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
-            quote[original_symbol] = {}
-            quote[original_symbol]['eventSymbol'] = event_symbol
-            quote[original_symbol]['bidPrice'] = data[i+7]
-            quote[original_symbol]['askPrice'] = data[i+11]
+            quote['Symbol'] = original_symbol
+            quote['eventSymbol'] = event_symbol
+            quote['bidPrice'] = data[i+7]
+            quote['askPrice'] = data[i+11]
+            quote['timeStamp'] = time.time()
         return quote
 
-    def __handle_compact_candle(self, data: list) -> dict:
+    def __handle_compact_candle(self, data: list) -> list:
         candle = {}
         for i in range(0, len(data), 18):
             event_symbol = data[i+1]
             original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
-            candle[original_symbol] = {}
-            candle[original_symbol]['eventSymbol'] = event_symbol
-            candle[original_symbol]['Open'] = data[i+8]
-            candle[original_symbol]['High'] = data[i+9]
-            candle[original_symbol]['Low'] = data[i+10]
-            candle[original_symbol]['Close'] = data[i+11]
-            candle[original_symbol]['Volumen'] = data[i+12]
+            candle['Symbol'] = original_symbol
+            candle['eventSymbol'] = event_symbol
+            candle['Open'] = data[i+8]
+            candle['High'] = data[i+9]
+            candle['Low'] = data[i+10]
+            candle['Close'] = data[i+11]
+            candle['Volumen'] = data[i+12]
+            candle['timeStamp'] = time.time()
         return candle
     
-    def __handle_compact_greeks(self, data: list) -> dict:
+    def __handle_compact_greeks(self, data: list) -> list:
         greeks = {}
         for i in range(0, len(data), 14):
             event_symbol = data[i+1]
             original_symbol = self.__streamer_symbol_translations.get_original_symbol(event_symbol)
-            greeks[original_symbol] = {}
-            greeks[original_symbol]['eventSymbol'] = event_symbol
-            greeks[original_symbol]['Price'] = data[i+8]
-            greeks[original_symbol]['Volatility'] = data[i+9]
-            greeks[original_symbol]['Delta'] = data[i+10]
-            greeks[original_symbol]['Gamma'] = data[i+11]
-            greeks[original_symbol]['Theta'] = data[i+12]
-            greeks[original_symbol]['Rho'] = data[i+13]
-            greeks[original_symbol]['Vega'] = data[i+13]
+            greeks['Symbol'] = original_symbol
+            greeks['eventSymbol'] = event_symbol
+            greeks['Price'] = data[i+8]
+            greeks['Volatility'] = data[i+9]
+            greeks['Delta'] = data[i+10]
+            greeks['Gamma'] = data[i+11]
+            greeks['Theta'] = data[i+12]
+            greeks['Rho'] = data[i+13]
+            greeks['Vega'] = data[i+13]
+            greeks['timeStamp'] = time.time()
         return greeks
 
     def __send(self, _type: str, channel: Optional[int] = 0, **kwargs) -> None:
